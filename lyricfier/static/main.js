@@ -15,7 +15,7 @@ const template = _.template(`
         <div  id="lyricBox" class="lyrics"><%- song.lyric %></div>
     
         <div class="credits-source">Source:
-            <a rel="noopener" target="_blank" href="#<%- song.source %>" >
+            <a rel="noopener" target="_blank" href="<%- song.sourceUrl %>" >
                 <%- song.source %>
             </a>
         </div>
@@ -33,34 +33,32 @@ const template = _.template(`
 let currentSong = null;
 let app = null;
 function update() {
-    fetch('/status')
-        .then(
-            function (response) {
-                if (response.status !== 200) {
-                    return;
-                }
-                response.json().then(function (data) {
-                        if (JSON.stringify(currentSong) !== JSON.stringify(data)) {
-                            currentSong = data;
-                            app.innerHTML = template(data);
-                        }
-                });
-            }
-        )
-        .catch(function (err) {
-            console.error('Fetch Error ', err);
-        });
+  fetch("/status")
+    .then(function(response) {
+      if (response.status !== 200) {
+        return;
+      }
+      response.json().then(function(data) {
+        if (JSON.stringify(currentSong) !== JSON.stringify(data)) {
+          currentSong = data;
+          app.innerHTML = template(data);
+        }
+      });
+    })
+    .catch(function(err) {
+      console.error("Fetch Error ", err);
+    });
 }
 const debouncedUpdate = _.debounce(update, 1000);
 function setup() {
-    app = document.getElementById('app');
-    update();
-    const conn = new WebSocket("ws://" + document.location.host + "/ws");
-    conn.onclose = function (evt) {
-        console.log('Connection error', evt)
-    };
-    conn.onmessage = function (evt) {
-        debouncedUpdate();
-    };
+  app = document.getElementById("app");
+  update();
+  const conn = new WebSocket("ws://" + document.location.host + "/ws");
+  conn.onclose = function(evt) {
+    console.log("Connection error", evt);
+  };
+  conn.onmessage = function(evt) {
+    debouncedUpdate();
+  };
 }
-document.addEventListener('DOMContentLoaded', setup, false);
+document.addEventListener("DOMContentLoaded", setup, false);
