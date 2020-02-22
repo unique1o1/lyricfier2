@@ -3,7 +3,6 @@ package search
 import (
 	"errors"
 	"fmt"
-	"github.com/PuerkitoBio/goquery"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -11,6 +10,8 @@ import (
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/PuerkitoBio/goquery"
 )
 
 var client = &http.Client{
@@ -56,20 +57,20 @@ func wikiaSearchSongUrl(artist string, title string) (string, error) {
 	return urlSong, nil
 }
 
-func Wikia(artist string, title string) (string, error) {
+func Wikia(artist string, title string) (string, string, error) {
 	songUrl, err := wikiaSearchSongUrl(artist, title)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 	response, err := client.Get(songUrl)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 	defer response.Body.Close()
 
 	doc, err := goquery.NewDocumentFromReader(response.Body)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 	var lyric = ""
 	doc.Find(".lyricbox").Each(func(i int, s *goquery.Selection) {
@@ -82,7 +83,7 @@ func Wikia(artist string, title string) (string, error) {
 		lyric = re2.ReplaceAllString(d.Text(), "\n")
 	})
 	if lyric == "" {
-		return "", errors.New("not found")
+		return "", "", errors.New("not found")
 	}
-	return lyric, nil
+	return lyric, songUrl, nil
 }

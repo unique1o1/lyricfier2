@@ -1,9 +1,10 @@
 package lyricfier
 
 import (
-	"github.com/emilioastarita/lyricfier2/internal/search"
 	"regexp"
 	"strings"
+
+	"github.com/emilioastarita/lyricfier2/internal/search"
 )
 
 type Song struct {
@@ -13,12 +14,14 @@ type Song struct {
 	Lyric      string `json:"lyric"`
 	LyricFound bool   `json:"found"`
 	Source     string `json:"source"`
+	SourceUrl  string `json:"sourceUrl"`
 }
 
 type SearchResult struct {
-	Found  bool
-	Lyric  string
-	Source string
+	Found     bool
+	Lyric     string
+	Source    string
+	SourceUrl string
 }
 
 type AppData struct {
@@ -92,20 +95,22 @@ func (h *Main) ReceiveLyric(newLyric *SearchResult) {
 	h.AppData.Song.Lyric = newLyric.Lyric
 	h.AppData.Song.LyricFound = newLyric.Found
 	h.AppData.Song.Source = newLyric.Source
+	h.AppData.Song.SourceUrl = newLyric.SourceUrl
 	h.server.NotifyChanges()
 }
 
 func (h *Main) Search(done chan *SearchResult, artist string, title string) {
 	s := &SearchResult{Found: false}
 	s.Source = "Wikia"
-	lyric, e := search.Wikia(artist, normalizeTitle(title))
+	lyric, SourceUrl, e := search.Wikia(artist, normalizeTitle(title))
 	if e != nil || lyric != "" {
 		s.Source = "Genius"
-		lyric, e = search.Genius(artist, normalizeTitle(title))
+		lyric, SourceUrl, e = search.Genius(artist, normalizeTitle(title))
 	}
 	if lyric != "" {
 		s.Found = true
 		s.Lyric = lyric
+		s.SourceUrl = SourceUrl
 	}
 	done <- s
 }

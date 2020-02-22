@@ -3,10 +3,11 @@ package search
 import (
 	"errors"
 	"fmt"
-	"github.com/PuerkitoBio/goquery"
-	"github.com/tidwall/gjson"
 	"io/ioutil"
 	"net/url"
+
+	"github.com/PuerkitoBio/goquery"
+	"github.com/tidwall/gjson"
 )
 
 func geniusSearchUrl(artist string, title string) (string, error) {
@@ -39,27 +40,27 @@ func geniusSearchUrl(artist string, title string) (string, error) {
 	return res.String(), nil
 }
 
-func Genius(artist string, title string) (string, error) {
+func Genius(artist string, title string) (string, string, error) {
 	songUrl, err := geniusSearchUrl(artist, title)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 	response, err := client.Get(songUrl)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 	defer response.Body.Close()
 
 	doc, err := goquery.NewDocumentFromReader(response.Body)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 	var lyric = ""
 	doc.Find(".lyrics p").Each(func(i int, s *goquery.Selection) {
 		lyric = s.Text()
 	})
 	if lyric == "" {
-		return "", errors.New("not found")
+		return "", "", errors.New("not found")
 	}
-	return lyric, nil
+	return lyric, songUrl, nil
 }
